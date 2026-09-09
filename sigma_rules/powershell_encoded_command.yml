@@ -1,0 +1,22 @@
+title: Suspicious Encoded PowerShell
+
+id: SIGMA-001
+
+description: Detect encoded PowerShell commands
+
+status: experimental
+
+level: high
+
+logsource:
+  product: windows
+
+detection:
+
+  keywords:
+
+    - powershell
+    - encodedcommand
+    - -enc
+
+condition: keywords

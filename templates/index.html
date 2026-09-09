@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>Windows Detection Platform</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f9;
+    margin:20px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+h2{
+    margin-top:40px;
+}
+
+.cards{
+    display:flex;
+    flex-wrap:wrap;
+    gap:15px;
+}
+
+.card{
+    background:white;
+    border:1px solid #ddd;
+    padding:20px;
+    min-width:180px;
+    box-shadow:0 2px 4px rgba(0,0,0,.1);
+}
+
+.card h3{
+    margin:0;
+}
+
+.card div{
+    font-size:28px;
+    margin-top:10px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th{
+    background:#222;
+    color:white;
+}
+
+th,td{
+    border:1px solid #ccc;
+    padding:8px;
+    text-align:left;
+}
+
+.section{
+    margin-top:30px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Windows Detection Platform Dashboard</h1>
+
+<div class="cards">
+
+<div class="card">
+<h3>Events</h3>
+<div id="events">0</div>
+</div>
+
+<div class="card">
+<h3>Alerts</h3>
+<div id="alerts">0</div>
+</div>
+
+<div class="card">
+<h3>High Alerts</h3>
+<div id="high">0</div>
+</div>
+
+<div class="card">
+<h3>New Alerts</h3>
+<div id="new">0</div>
+</div>
+
+<div class="card">
+<h3>Open Cases</h3>
+<div id="cases">0</div>
+</div>
+
+<div class="card">
+<h3>IOC Matches</h3>
+<div id="intel">0</div>
+</div>
+
+<div class="card">
+<h3>MITRE Mappings</h3>
+<div id="mitrecount">0</div>
+</div>
+
+</div>
+
+<div class="section">
+
+<h2>Recent Alerts</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Alert</th>
+<th>Severity</th>
+<th>Rule</th>
+<th>Confidence</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="alertTable"></tbody>
+
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>Investigation Cases</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Case Name</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Assigned To</th>
+</tr>
+</thead>
+
+<tbody id="caseTable"></tbody>
+
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>Threat Intelligence Matches</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Indicator</th>
+<th>Type</th>
+<th>Threat Name</th>
+<th>Severity</th>
+<th>Matched Value</th>
+</tr>
+</thead>
+
+<tbody id="intelTable"></tbody>
+
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>MITRE ATT&CK Mappings</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Alert ID</th>
+<th>Technique ID</th>
+<th>Technique Name</th>
+<th>Tactic</th>
+</tr>
+</thead>
+
+<tbody id="mitreTable"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+async function loadStats(){
+
+    const response = await fetch("/api/stats");
+    const data = await response.json();
+
+    document.getElementById("events").innerText =
+        data.events;
+
+    document.getElementById("alerts").innerText =
+        data.alerts;
+
+    document.getElementById("high").innerText =
+        data.high_alerts;
+
+    document.getElementById("new").innerText =
+        data.new_alerts;
+
+    document.getElementById("cases").innerText =
+        data.open_cases;
+
+    document.getElementById("intel").innerText =
+        data.intel_matches;
+
+    document.getElementById("mitrecount").innerText =
+        data.mitre_count;
+}
+
+
+async function loadAlerts(){
+
+    const response = await fetch("/api/alerts");
+    const alerts = await response.json();
+
+    let html = "";
+
+    alerts.forEach(alert => {
+
+        html += `
+        <tr>
+            <td>${alert.id}</td>
+            <td>${alert.alert_name}</td>
+            <td>${alert.severity}</td>
+            <td>${alert.rule_name}</td>
+            <td>${alert.confidence}</td>
+            <td>${alert.status}</td>
+        </tr>`;
+    });
+
+    document.getElementById(
+        "alertTable"
+    ).innerHTML = html;
+}
+
+
+async function loadCases(){
+
+    const response = await fetch("/api/cases");
+    const data = await response.json();
+
+    let html = "";
+
+    data.forEach(item => {
+
+        html += `
+        <tr>
+            <td>${item.id}</td>
+            <td>${item.case_name}</td>
+            <td>${item.priority}</td>
+            <td>${item.status}</td>
+            <td>${item.assigned_to}</td>
+        </tr>`;
+    });
+
+    document.getElementById(
+        "caseTable"
+    ).innerHTML = html;
+}
+
+
+async function loadIntel(){
+
+    const response = await fetch("/api/threatintel");
+    const data = await response.json();
+
+    let html = "";
+
+    data.forEach(item => {
+
+        html += `
+        <tr>
+            <td>${item.indicator}</td>
+            <td>${item.indicator_type}</td>
+            <td>${item.threat_name}</td>
+            <td>${item.severity}</td>
+            <td>${item.matched_value}</td>
+        </tr>`;
+    });
+
+    document.getElementById(
+        "intelTable"
+    ).innerHTML = html;
+}
+
+
+async function loadMitre(){
+
+    const response = await fetch("/api/mitre");
+    const data = await response.json();
+
+    let html = "";
+
+    data.forEach(item => {
+
+        html += `
+        <tr>
+            <td>${item.alert_id}</td>
+            <td>${item.technique_id}</td>
+            <td>${item.technique_name}</td>
+            <td>${item.tactic}</td>
+        </tr>`;
+    });
+
+    document.getElementById(
+        "mitreTable"
+    ).innerHTML = html;
+}
+
+
+loadStats();
+loadAlerts();
+loadCases();
+loadIntel();
+loadMitre();
+
+setInterval(loadStats,10000);
+setInterval(loadAlerts,10000);
+setInterval(loadCases,10000);
+setInterval(loadIntel,10000);
+setInterval(loadMitre,10000);
+
+</script>
+
+</body>
+</html>
